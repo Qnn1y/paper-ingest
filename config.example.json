@@ -1,0 +1,16 @@
+{
+  "_comment_1": "复制本文件为 config.json 并填写你的值。config.json 已被 .gitignore 排除，绝不进 git。",
+  "_comment_2": "Zotero 凭证：zotero.org → 登录 → Settings → API Keys → Create（勾选 library/notes/write/file upload）",
+  "library_id": "YOUR_ZOTERO_USER_ID",
+  "library_type": "user",
+  "api_key": "YOUR_ZOTERO_API_KEY",
+
+  "_comment_3": "Obsidian vault 根路径。下面的子目录名可任意改，不强制 01-Papers/06-Notes 这种命名。",
+  "vault_dir": "/path/to/your/obsidian/vault",
+  "papers_subdir": "01-Papers",
+  "notes_subdir": "06-Notes",
+  "dashboard_subdir": "00-Dashboard",
+
+  "_comment_4": "下载的 PDF 存这里（用于挂到 Zotero 附件）",
+  "storage_dir": "/path/to/your/pdf/storage"
+}
