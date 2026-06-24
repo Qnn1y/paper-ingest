@@ -13,3 +13,9 @@ venv/
 # 临时
 *.json.bak
 meta_*.json
+# 自动生成的 PDF 挂载文件（含本地路径，非密但不应进 git）
+pending_attachments.json
+attach_pending.js
+maprps_*.json
+maprps_*.txt
+driver_maprps.py

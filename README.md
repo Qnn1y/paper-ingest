@@ -16,7 +16,7 @@
 - 🔗 **多种输入**：arXiv/DOI 链接、纯论文标题、公众号/知乎链接
 - 📖 **PDF 精读**（不是摘要复述）：下载 PDF → 提取全文 → 8 字段深度笔记（问题/贡献/方法详解/实验/细节/局限/我的思考）
 - 🗂️ **自动分类**：按你的 Zotero collection 结构归类（默认 30 分类：SAR/超分/复原/扩散/基础方法）
-- 📚 **Zotero 全自动入库**：pyzotero 建条目 + 归类 + 挂 PDF + 查重
+- 📚 **Zotero 自动入库**：pyzotero 建条目 + 归类 + 查重；**PDF 挂载走 WebDAV 坚果云**（不撞 zotero.org 300MB 配额，见下）
 - 📝 **Obsidian 笔记**：frontmatter 带 `category`，Dataview 自动索引
 - 🌐 **公众号智能分流**：识别解读的是哪篇论文 → 论文入 Zotero + 解读笔记关联 `[[论文]]`
 - ✅ **确认检查点**：入库前展示分类决策让你确认（防误归类）
@@ -76,6 +76,27 @@ cp config.example.json config.json
 
 Claude 会自动触发 skill，走完整流程，关键分类决策前会让你确认。
 
+## PDF 同步（坚果云 WebDAV）
+
+> ⚠️ **关键设计**：PDF 挂载**不走 pyzotero**。因为 pyzotero 文件上传只能走 zotero.org 服务器存储（有 300MB 配额），而用户的 PDF 同步主力是**坚果云 WebDAV**。pyzotero 不支持 WebDAV，直接挂会把 zotero.org 配额撑爆（且留下「幽灵附件」——附件条目建了但文件没传上去）。
+
+**本 skill 的做法**：
+1. 入库时，PDF 路径累积到 `pending_attachments.json`（不入 zotero.org）
+2. 自动生成 `attach_pending.js`（Zotero Run JavaScript 脚本）
+3. **你在 Zotero 客户端跑一次 `attach_pending.js`** → `importFromFile` 走客户端配置的 WebDAV 上传到坚果云（不占 zotero.org 配额）
+4. 挂载成功的条目，下次生成 JS 时自动从 pending 剔除（用 `md5` 字段判断真挂载，能识别并跳过幽灵附件）
+
+**前提**：Zotero 客户端「编辑 → 首选项 → 同步 → 文件同步」选 **WebDAV** 并填好坚果云地址（不是 zotero.org）。
+
+**操作**：
+```
+Zotero → 工具 → 开发者 → Run JavaScript
+粘贴 <skill目录>/attach_pending.js 的内容 → Run
+跑完点右上角「同步」
+```
+
+> 期刊论文（IEEE/Elsevier 等无 arXiv 版的）PDF 需自行下载后，手动在 Zotero 拖入条目即可（同样走 WebDAV）。
+
 ## 自定义
 
 - **分类规则**：改 `scripts/classify.py` 的 `classify()` 函数（判定逻辑在 `references/classification.md` 详解）
@@ -90,12 +111,14 @@ paper-ingest/
 ├── README.md
 ├── config.example.json       # 配置模板（复制为 config.json）
 ├── .gitignore                # 排除 config.json（含 API key）
+├── pending_attachments.json  # 待挂 PDF 列表（自动生成，gitignore）
+├── attach_pending.js         # Zotero Run JavaScript 挂 PDF（自动生成）
 ├── scripts/
 │   ├── _common.py            # 配置加载 + pyzotero/arXiv/S2 客户端
 │   ├── resolve_meta.py       # URL/标题/DOI → 元数据
 │   ├── extract_text.py       # PDF → 全文文本（精读用）
 │   ├── classify.py           # 分类规则
-│   ├── zotero_push.py        # Zotero 入库 + 归类 + 挂 PDF + 查重
+│   ├── zotero_push.py        # Zotero 入库 + 归类 + 查重（PDF 累积 pending → WebDAV）
 │   └── obsidian_note.py      # 渲染精读笔记
 ├── references/
 │   └── classification.md     # 30 分类判定详解
